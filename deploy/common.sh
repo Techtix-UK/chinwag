@@ -31,7 +31,7 @@ env_get() {
   grep -E "^${key}=" "$file" | tail -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'
 }
 
-as_service() { sudo -u "$SERVICE_USER" -H env HOME="$(getent passwd "$SERVICE_USER" | cut -d: -f6)" PUPPETEER_SKIP_DOWNLOAD=1 "$@"; }
+as_service() { sudo -u "$SERVICE_USER" -H env HOME="$(getent passwd "$SERVICE_USER" | cut -d: -f6)" PUPPETEER_SKIP_DOWNLOAD=1 SCARF_ANALYTICS=false "$@"; }
 
 pm2_service() { as_service pm2 "$@"; }
 

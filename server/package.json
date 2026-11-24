@@ -27,7 +27,7 @@
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.4",
     "swagger-ui-express": "^5.0.1",
-    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#38eb45b2759450cc6fccb6a7a3f2cbc3bdb87db2",
+    "whatsapp-web.js": "https://codeload.github.com/pedroslopez/whatsapp-web.js/tar.gz/38eb45b2759450cc6fccb6a7a3f2cbc3bdb87db2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
