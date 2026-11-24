@@ -94,14 +94,18 @@ if [[ ! -f .env ]]; then
   TOKEN="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-32)"
   node -e '
     const fs = require("fs"); let s = fs.readFileSync(".env", "utf8");
-    const set = (k, v) => { s = s.replace(new RegExp("^" + k + "=.*$", "m"), k + "=" + v); };
-    const [,, base, port, db, key, token, chrome, data] = process.argv;
+    const set = (k, v) => { s = s.replace(new RegExp("^" + k + "=.*$", "m"), () => k + "=" + v); };
+    const [, base, port, db, key, token, chrome, data] = process.argv; // node -e: argv[1] is the first argument
     set("BASE_URL", base); set("PORT", port); set("DATABASE_URL", db); set("APP_ENCRYPTION_KEY", key);
     set("SETUP_TOKEN", token); set("CHROMIUM_PATH", chrome); set("DATA_DIR", data);
     fs.writeFileSync(".env", s);
   ' "$BASE_URL" "$PORT" "$DATABASE_URL" "$KEY" "$TOKEN" "$CHROMIUM_BIN" "$DATA_DIR"
   c_warn "APP_ENCRYPTION_KEY was generated. Store a copy somewhere safe and separate from backups."
 fi
+# Sanity-check the environment file before going further.
+[[ "$(env_get DATABASE_URL)" =~ ^mysql:// ]] || die ".env DATABASE_URL is not a mysql:// URL — fix $APP_DIR/.env (or delete it and re-run)."
+[[ "$(env_get BASE_URL)" =~ ^https?:// ]] || die ".env BASE_URL is not an http(s) URL — fix $APP_DIR/.env."
+[[ "$(env_get PORT)" =~ ^[0-9]+$ ]] || die ".env PORT must be a number — fix $APP_DIR/.env."
 chown root:"$SERVICE_USER" .env && chmod 640 .env
 
 # ── 5. Dependencies, build and migrations ───────────────────────────────────
