@@ -6,7 +6,7 @@ import { dummyVerify, verifyPassword } from './passwords.js';
 import { loadUserPrincipal } from './principals.js';
 import type { Principal } from './permissions.js';
 
-export const SESSION_COOKIE = 'ttw_session';
+export const SESSION_COOKIE = 'chinwag_session';
 
 export type LoginResult =
   | { ok: true; token: string; csrfToken: string; expiresAt: Date; userId: string }

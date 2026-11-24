@@ -63,8 +63,8 @@ describe('webhooks', () => {
       await new Promise((r) => setTimeout(r, 300));
       await processQueue();
       const last = received.at(-1)!;
-      expect(last.headers['x-techtix-event']).toBe('message.received');
-      expect(verifySignature(secret, String(last.headers['x-techtix-signature']), last.body)).toBe(true);
+      expect(last.headers['x-chinwag-event']).toBe('message.received');
+      expect(verifySignature(secret, String(last.headers['x-chinwag-signature']), last.body)).toBe(true);
       const deliveries = await prisma().webhookDelivery.findMany({ where: { webhookId: webhook.id } });
       expect(deliveries).toHaveLength(1);
       expect(deliveries[0].status).toBe('SUCCEEDED');

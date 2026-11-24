@@ -23,7 +23,7 @@ describe('authentication', () => {
     await createUser('a@test.local', 'agent');
     const res = await request(app).post('/api/v1/auth/login').send({ email: 'a@test.local', password: 'Correct-Horse-Battery-9' });
     const cookie = String(res.headers['set-cookie']);
-    expect(cookie).toMatch(/ttw_session=/);
+    expect(cookie).toMatch(/chinwag_session=/);
     expect(cookie).toMatch(/HttpOnly/i);
     expect(cookie).toMatch(/SameSite=Lax/i);
   });

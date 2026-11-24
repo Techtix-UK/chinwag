@@ -51,11 +51,11 @@ export function buildOpenApi() {
   return {
     openapi: '3.1.0',
     info: {
-      title: 'Techtix WhatsApp API',
+      title: 'Chinwag API',
       version: '1.0.0',
       description:
-        'REST API for Techtix WhatsApp by Techtix Global. Uses WhatsApp Web linked-device sessions via the unofficial whatsapp-web.js library — not affiliated with WhatsApp or Meta.\n\n' +
-        'Authenticate with `Authorization: Bearer ttw_…` API keys. Scopes:\n' + DATA_SCOPES.map((s) => `- \`${s}\` — ${SCOPE_DESCRIPTIONS[s]}`).join('\n') +
+        'REST API for Chinwag by Techtix Global. Uses WhatsApp Web linked-device sessions via the unofficial whatsapp-web.js library — not affiliated with WhatsApp or Meta.\n\n' +
+        'Authenticate with `Authorization: Bearer cwk_…` API keys. Scopes:\n' + DATA_SCOPES.map((s) => `- \`${s}\` — ${SCOPE_DESCRIPTIONS[s]}`).join('\n') +
         '\n\nResponses use `{ "data": … , "meta": { "pagination": … } }`; errors use `{ "error": { "code", "message", "details" } }`.',
     },
     servers: [{ url: new URL('/', env().baseUrl).toString().replace(/\/$/, '') }],
@@ -63,7 +63,7 @@ export function buildOpenApi() {
     components: {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', description: 'API key created under API Credentials' },
-        cookieAuth: { type: 'apiKey', in: 'cookie', name: 'ttw_session', description: 'Dashboard session (requires X-CSRF-Token for writes)' },
+        cookieAuth: { type: 'apiKey', in: 'cookie', name: 'chinwag_session', description: 'Dashboard session (requires X-CSRF-Token for writes)' },
       },
       schemas: {
         Envelope: { type: 'object', properties: { data: {}, meta: { type: 'object' } } },

@@ -1,0 +1,21 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove phone numbers, message content and tokens from anything you paste. Security issues: use a private security advisory instead."
+  - type: input
+    id: version
+    attributes: { label: Chinwag version, description: "Output of `chinwag version`" }
+    validations: { required: true }
+  - type: input
+    id: os
+    attributes: { label: Operating system, placeholder: "Ubuntu 24.04 amd64" }
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: Steps to reproduce, expected vs actual }
+    validations: { required: true }
+  - type: textarea
+    id: logs
+    attributes: { label: Logs, description: "`sudo chinwag logs 80` and `sudo chinwag doctor`", render: shell }

@@ -13,7 +13,7 @@ const schema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3100),
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
-  DATA_DIR: z.string().default('/var/lib/techtix-whatsapp'),
+  DATA_DIR: z.string().default('/var/lib/chinwag'),
   APP_ENCRYPTION_KEY: z.string().default(''),
   SETUP_TOKEN: z.string().optional().default(''),
   CHROMIUM_PATH: z.string().optional().default(''),

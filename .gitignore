@@ -10,3 +10,5 @@ web/dist/
 .wwebjs_auth/
 coverage/
 backups/
+docs/.vitepress/dist/
+docs/.vitepress/cache/

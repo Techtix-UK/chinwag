@@ -61,6 +61,6 @@ describe('Client ID Metadata Documents (ChatGPT)', () => {
       client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer', client_assertion: 'ignored.jwt.value',
     });
     expect(tok.status).toBe(200);
-    expect(tok.body.access_token).toMatch(/^tto_/);
+    expect(tok.body.access_token).toMatch(/^cwa_/);
   });
 });

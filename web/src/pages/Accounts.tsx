@@ -193,7 +193,7 @@ export default function Accounts() {
               toastError(err);
             }
           }}>
-            <Field label="Display name" htmlFor="dn" hint="For example: Techtix Global UK"><Input id="dn" required maxLength={128} value={name} onChange={(e) => setName(e.target.value)} autoFocus /></Field>
+            <Field label="Display name" htmlFor="dn" hint="For example: Sales UK"><Input id="dn" required maxLength={128} value={name} onChange={(e) => setName(e.target.value)} autoFocus /></Field>
             <DialogFooter><Button variant="outline" onClick={() => setAdding(false)}>Cancel</Button><Button type="submit" disabled={!name.trim()}>Create and pair</Button></DialogFooter>
           </form>
         </DialogContent>

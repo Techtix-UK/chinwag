@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { getSocket, resetSocket, useSocketEvent } from '@/lib/socket';
 import { useThemePref } from '@/lib/theme';
 import { cn } from '@/lib/utils';
-import { ProductLockup, TechtixIcon } from '../Brand';
+import { ChinwagMark, ProductLockup } from '../Brand';
 import { Avatar, Tooltip } from '../ui/misc';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown';
@@ -49,8 +49,8 @@ function Logo({ collapsed }: { collapsed: boolean }) {
   const { me } = useAuth();
   return (
     <div className={cn('flex h-14 items-center px-3.5', collapsed && 'justify-center px-0')}>
-      {collapsed ? <TechtixIcon className="size-6" /> : <ProductLockup customUrl={me?.app.logo_url} />}
-      <span className="sr-only">{me?.app.name ?? 'Techtix WhatsApp'}</span>
+      {collapsed ? <ChinwagMark className="size-7" /> : <ProductLockup customUrl={me?.app.logo_url} appName={me?.app.name ?? 'Chinwag'} byline />}
+      <span className="sr-only">{me?.app.name ?? 'Chinwag'}</span>
     </div>
   );
 }

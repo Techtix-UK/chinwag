@@ -17,7 +17,7 @@ import { decryptSecret, encryptSecret, randomToken, sha256 } from '../lib/crypto
 import { logger, errMsg } from '../lib/logger.js';
 import { safeFetch } from '../lib/netguard.js';
 import { audit } from '../services/audit.js';
-import { authenticateApiKey, API_KEY_PREFIX } from '../services/apiKeys.js';
+import { authenticateApiKey, looksLikeApiKey } from '../services/apiKeys.js';
 import { MCP_SCOPES, type Principal } from '../services/permissions.js';
 import { oauthPrincipal } from '../services/principals.js';
 import { settings } from '../services/settings.js';
@@ -112,7 +112,7 @@ export const clientsStore: OAuthRegisteredClientsStore = {
   },
   async registerClient(client) {
     if (!settings().allowDynamicClientRegistration) throw new InvalidClientMetadataError('Dynamic client registration is disabled by the administrator');
-    const clientId = (client as any).client_id ?? 'ttc_' + randomToken(18);
+    const clientId = (client as any).client_id ?? 'cwc_' + randomToken(18);
     const row = await prisma().oAuthClient.create({
       data: {
         clientId,
@@ -145,8 +145,8 @@ function resourceMatches(resource: string | URL | undefined | null): boolean {
 }
 
 async function issueTokens(authorisationId: string, scopes: string[], resource: string | null, parentId: string | null): Promise<OAuthTokens> {
-  const access = 'tto_' + randomToken(32);
-  const refresh = 'ttr_' + randomToken(32);
+  const access = 'cwa_' + randomToken(32);
+  const refresh = 'cwr_' + randomToken(32);
   const now = Date.now();
   await prisma().oAuthToken.createMany({
     data: [
@@ -241,7 +241,7 @@ export const oauthProvider: OAuthServerProvider = {
 
   async verifyAccessToken(token: string): Promise<AuthInfo> {
     // API keys may also be used against /mcp (useful for testing and server-to-server clients).
-    if (token.startsWith(API_KEY_PREFIX)) {
+    if (looksLikeApiKey(token)) {
       const p = await authenticateApiKey(token);
       if (!p) throw new InvalidTokenError('Invalid or expired API key');
       return { token, clientId: p.id, scopes: [...p.capabilities], expiresAt: Math.floor(Date.now() / 1000) + 300, extra: { principal: p } };

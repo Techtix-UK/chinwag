@@ -51,7 +51,7 @@ export function createApp(): Express {
       issuerUrl: issuer,
       resourceServerUrl: env().mcpUrl,
       scopesSupported: [...MCP_SCOPES],
-      resourceName: 'Techtix WhatsApp',
+      resourceName: 'Chinwag',
       serviceDocumentationUrl: new URL('/api/docs', issuer),
       clientRegistrationOptions: { clientSecretExpirySeconds: 0 },
     }),
@@ -103,7 +103,7 @@ export function createApp(): Express {
   app.use('/api/docs', authenticate, (req: Request, res: Response, next: NextFunction) => {
     if (!req.principal || req.principal.type !== 'user') return res.redirect('/login?next=/api/docs');
     next();
-  }, swaggerUi.serve, swaggerUi.setup(undefined, { swaggerOptions: { url: '/api/v1/openapi.json', withCredentials: true }, customSiteTitle: 'Techtix WhatsApp API' }));
+  }, swaggerUi.serve, swaggerUi.setup(undefined, { swaggerOptions: { url: '/api/v1/openapi.json', withCredentials: true }, customSiteTitle: 'Chinwag API' }));
 
   // ── Dashboard SPA ──
   const webDist = path.resolve(here, '..', '..', 'web', 'dist');

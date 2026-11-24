@@ -47,7 +47,7 @@ describe('MCP server', () => {
     const token = await keyFor([a.id], 'DIRECT');
     const init = await rpc(token, 'initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test', version: '1' } });
     expect(init.status).toBe(200);
-    expect(init.body.result.serverInfo.name).toBe('techtix-whatsapp');
+    expect(init.body.result.serverInfo.name).toBe('chinwag');
     expect(init.body.result.instructions).toMatch(/untrusted/i);
     const list = await rpc(token, 'tools/list');
     const tools = list.body.result.tools as any[];

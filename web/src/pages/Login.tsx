@@ -55,7 +55,7 @@ export function LoginPage() {
       <Card>
         <CardContent className="p-5">
           <h1 className="text-base font-semibold">Sign in</h1>
-          <p className="mt-1 text-[13px] text-muted">Use your Techtix WhatsApp administrator account.</p>
+          <p className="mt-1 text-[13px] text-muted">Use your Chinwag administrator account.</p>
           <form onSubmit={submit} className="mt-5 grid gap-4">
             <Field label="Email" htmlFor="email">
               <Input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />

@@ -108,10 +108,10 @@ async function deliver(hook: Webhook, payload: unknown, eventType: string, event
     allowPrivate: true,
     headers: {
       'content-type': 'application/json',
-      'x-techtix-event': eventType,
-      'x-techtix-event-id': eventId,
-      'x-techtix-timestamp': String(ts),
-      'x-techtix-signature': signPayload(secret, ts, body),
+      'x-chinwag-event': eventType,
+      'x-chinwag-event-id': eventId,
+      'x-chinwag-timestamp': String(ts),
+      'x-chinwag-signature': signPayload(secret, ts, body),
     },
   });
   return { status: res.status, body: res.body.toString('utf8').slice(0, 1000), durationMs: Date.now() - started };
@@ -169,7 +169,7 @@ export async function testWebhook(id: string) {
   const hook = await prisma().webhook.findUnique({ where: { id } });
   if (!hook) throw notFound('Webhook');
   const eventId = 'evt_test_' + randomToken(12);
-  const payload = { id: eventId, type: 'webhook.test', created_at: new Date().toISOString(), account_id: null, data: { message: 'Test event from Techtix WhatsApp' } };
+  const payload = { id: eventId, type: 'webhook.test', created_at: new Date().toISOString(), account_id: null, data: { message: 'Test event from Chinwag' } };
   const delivery = await prisma().webhookDelivery.create({ data: { webhookId: id, event: 'webhook.test', eventId, payload: payload as any, status: 'DELIVERING', attempts: 1 } });
   try {
     const r = await deliver(hook, payload, 'webhook.test', eventId);

@@ -58,7 +58,7 @@ export async function confirmInClient(p: Principal, id: string, decision: Decisi
   if (p.type !== 'oauth') throw new AppError(403, 'forbidden', 'Only MCP connections can confirm requests in the client');
   const a = await prisma().messageApproval.findUnique({ where: { id } });
   if (!a || a.requestedByType !== p.type || a.requestedById !== p.id) throw notFound('Pending request');
-  if (a.confirmMode === 'dashboard') throw conflict('This request must be approved by a reviewer in the Techtix WhatsApp dashboard');
+  if (a.confirmMode === 'dashboard') throw conflict('This request must be approved by a reviewer in the Chinwag dashboard');
   if (a.status !== 'PENDING') throw conflict(`This request is already ${a.status.toLowerCase()}`);
   if (a.expiresAt && a.expiresAt < new Date()) {
     await prisma().messageApproval.updateMany({ where: { id, status: 'PENDING' }, data: { status: 'REJECTED', decisionNote: 'Expired before it was confirmed', decidedAt: new Date() } });

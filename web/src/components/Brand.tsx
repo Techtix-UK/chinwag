@@ -1,31 +1,33 @@
 import { cn } from '@/lib/utils';
 
-/**
- * Techtix logo lockups from the official logo pack (unaltered PNG exports).
- * Light backgrounds use the primary (orange + carbon) lockup, dark backgrounds the orange + white lockup;
- * both are in the DOM and the theme variant shows the right one, so it follows system or manual theme without JS.
- */
-export function TechtixLogo({ className, customUrl }: { className?: string; customUrl?: string | null }) {
-  if (customUrl) return <img src={customUrl} alt="Techtix" className={cn('h-7 w-auto', className)} />;
+/** Chinwag mark: the Techtix "T" in a speech bubble (branding/chinwag-mark.svg). */
+export function ChinwagMark({ className }: { className?: string }) {
+  return <img src="/brand/chinwag-mark.svg" alt="" width={512} height={512} className={cn('size-7', className)} />;
+}
+
+/** Official Techtix lockup (unaltered logo-pack exports); the theme variant shows the right one for light/dark. */
+export function TechtixLogo({ className }: { className?: string }) {
   return (
     <>
-      <img src="/brand/techtix-horizontal-primary.png" alt="Techtix" width={600} height={113} className={cn('h-7 w-auto dark:hidden', className)} />
-      <img src="/brand/techtix-horizontal-orange-white.png" alt="Techtix" width={600} height={113} className={cn('hidden h-7 w-auto dark:block', className)} />
+      <img src="/brand/techtix-horizontal-primary.png" alt="Techtix" width={600} height={113} className={cn('h-4 w-auto dark:hidden', className)} />
+      <img src="/brand/techtix-horizontal-orange-white.png" alt="Techtix" width={600} height={113} className={cn('hidden h-4 w-auto dark:block', className)} />
     </>
   );
 }
 
-export function TechtixIcon({ className }: { className?: string }) {
-  return <img src="/brand/techtix-icon-orange.png" alt="Techtix" width={493} height={493} className={cn('size-7', className)} />;
-}
-
-/** Product lockup: Techtix logo plus the product name, separated by a rule. */
-export function ProductLockup({ className, customUrl, size = 'md' }: { className?: string; customUrl?: string | null; size?: 'md' | 'lg' }) {
+/** Product lockup: Chinwag mark + wordmark, optional "by Techtix". A custom logo (Settings) replaces the mark. */
+export function ProductLockup({ className, customUrl, appName = 'Chinwag', size = 'md', byline = false }: { className?: string; customUrl?: string | null; appName?: string; size?: 'md' | 'lg'; byline?: boolean }) {
   return (
     <div className={cn('flex items-center gap-2.5', className)}>
-      <TechtixLogo customUrl={customUrl} className={size === 'lg' ? 'h-8' : 'h-6'} />
-      <span aria-hidden className={cn('w-px self-stretch bg-border', size === 'lg' ? 'my-1' : 'my-0.5')} />
-      <span className={cn('font-semibold tracking-tight', size === 'lg' ? 'text-base' : 'text-[13px]')}>WhatsApp</span>
+      {customUrl ? <img src={customUrl} alt="" className={size === 'lg' ? 'h-9 w-auto' : 'h-7 w-auto'} /> : <ChinwagMark className={size === 'lg' ? 'size-9' : 'size-7'} />}
+      <div className="leading-tight">
+        <p className={cn('font-bold tracking-tight', size === 'lg' ? 'text-xl' : 'text-[15px]')}>{appName}</p>
+        {byline && (
+          <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted">
+            by <TechtixLogo className="h-3" />
+          </p>
+        )}
+      </div>
     </div>
   );
 }

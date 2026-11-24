@@ -6,7 +6,12 @@ import { audit } from './audit.js';
 import { DATA_SCOPES, can, type Principal, type Scope } from './permissions.js';
 import { apiKeyPrincipal } from './principals.js';
 
-export const API_KEY_PREFIX = 'ttw_';
+export const API_KEY_PREFIX = 'cwk_';
+/** Keys issued before the rename to Chinwag keep working. */
+export const LEGACY_API_KEY_PREFIXES = ['ttw_'];
+export function looksLikeApiKey(token: string) {
+  return token.startsWith(API_KEY_PREFIX) || LEGACY_API_KEY_PREFIXES.some((p) => token.startsWith(p));
+}
 
 export function serializeApiKey(k: ApiKey) {
   const expired = !!k.expiresAt && k.expiresAt < new Date();
@@ -86,7 +91,7 @@ export async function rotateApiKey(p: Principal, id: string) {
 
 /** Resolve a presented bearer API key into a principal. */
 export async function authenticateApiKey(presented: string, ip?: string): Promise<Principal | null> {
-  if (!presented.startsWith(API_KEY_PREFIX) || presented.length > 200) return null;
+  if (!looksLikeApiKey(presented) || presented.length > 200) return null;
   const key = await prisma().apiKey.findUnique({ where: { keyHash: sha256(presented) } });
   if (!key || key.revokedAt) return null;
   if (key.expiresAt && key.expiresAt < new Date()) return null;

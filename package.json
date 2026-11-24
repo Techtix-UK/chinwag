@@ -1,12 +1,13 @@
 {
-  "name": "techtix-whatsapp",
+  "name": "chinwag",
   "version": "1.0.0",
   "private": true,
-  "description": "Techtix WhatsApp — self-hosted multi-account WhatsApp Web management, REST API and remote MCP server. Developed by Techtix Global.",
-  "license": "UNLICENSED",
+  "description": "Chinwag — self-hosted WhatsApp inbox, REST API and MCP server for AI assistants. By Techtix.",
+  "license": "AGPL-3.0-only",
   "workspaces": [
     "server",
-    "web"
+    "web",
+    "docs"
   ],
   "engines": {
     "node": ">=20.19"
@@ -18,7 +19,9 @@
     "test": "npm run test -w server",
     "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
     "db:migrate": "npm run db:migrate -w server",
-    "db:deploy": "npm run db:deploy -w server"
+    "db:deploy": "npm run db:deploy -w server",
+    "docs:dev": "npm run dev -w docs",
+    "docs:build": "npm run build -w docs"
   },
   "allowScripts": {
     "argon2@0.45.2": true,
@@ -28,6 +31,12 @@
     "@scarf/scarf": false,
     "puppeteer": false,
     "fsevents": false,
-    "github:pedroslopez/whatsapp-web.js": false
+    "github:pedroslopez/whatsapp-web.js": false,
+    "esbuild@0.21.5": true
+  },
+  "homepage": "https://techtix-uk.github.io/chinwag/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Techtix-UK/chinwag.git"
   }
 }

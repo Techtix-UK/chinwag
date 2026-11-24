@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://techtix-uk.github.io/chinwag/
+    about: Installation, configuration and troubleshooting guides
+  - name: Report a security vulnerability
+    url: https://github.com/Techtix-UK/chinwag/security/advisories/new
+    about: Please report security issues privately

@@ -1,5 +1,5 @@
 {
-  "name": "@techtix-whatsapp/server",
+  "name": "@chinwag/server",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -42,5 +42,6 @@
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "vitest": "^5.1.1"
-  }
+  },
+  "license": "AGPL-3.0-only"
 }

@@ -126,7 +126,7 @@ function requestOnce(url: URL, address: string, family: 4 | 6, opts: SafeFetchOp
       url,
       {
         method: opts.method ?? 'GET',
-        headers: { 'user-agent': 'TechtixWhatsApp/1.0', ...(opts.headers ?? {}) },
+        headers: { 'user-agent': 'Chinwag/1.0', ...(opts.headers ?? {}) },
         // Pin the validated address to defeat DNS rebinding.
         lookup: (_h: string, o: any, cb: any) => {
           if (o && o.all) cb(null, [{ address, family }]);

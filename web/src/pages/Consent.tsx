@@ -21,7 +21,7 @@ interface ConsentData {
 const POLICY_LABEL: Record<string, string> = {
   CONFIRM_IN_CHAT: 'Confirm in ChatGPT — you confirm each message in the chat before it is sent',
   CONFIRM_IN_CHAT_OR_DASHBOARD: 'Confirm in ChatGPT or approve in the dashboard',
-  REQUIRE_APPROVAL: 'Dashboard approval — a reviewer approves each message in Techtix WhatsApp',
+  REQUIRE_APPROVAL: 'Dashboard approval — a reviewer approves each message in Chinwag',
   READ_ONLY: 'Read-only — cannot send anything',
   DIRECT: 'Direct sending — messages are sent immediately',
 };
@@ -73,7 +73,7 @@ export function ConsentPage() {
                 <div>
                   <h1 className="text-base font-semibold">Authorise {q.data.client.name}</h1>
                   <p className="mt-1 text-[13px] text-muted">
-                    <strong className="text-foreground">{q.data.client.name}</strong> wants to access Techtix WhatsApp on your behalf ({me.email}). After approval you will return to <code>{q.data.client.redirect_host}</code>.
+                    <strong className="text-foreground">{q.data.client.name}</strong> wants to access Chinwag on your behalf ({me.email}). After approval you will return to <code>{q.data.client.redirect_host}</code>.
                   </p>
                 </div>
               </div>

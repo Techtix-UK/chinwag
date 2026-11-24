@@ -1,0 +1,38 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: chinwag_test
+          MARIADB_USER: chinwag
+          MARIADB_PASSWORD: chinwag
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      TEST_DATABASE_URL: mysql://chinwag:chinwag@127.0.0.1:3306/chinwag_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+        working-directory: server
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build -w web
+      - run: bash -n install.sh scripts/*.sh scripts/chinwag

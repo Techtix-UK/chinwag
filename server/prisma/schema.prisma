@@ -1,4 +1,4 @@
-// Techtix WhatsApp — database schema (MySQL / MariaDB)
+// Chinwag — database schema (MySQL / MariaDB)
 // All timestamps are stored in UTC. Every WhatsApp-related record references its account.
 
 generator client {

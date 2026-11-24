@@ -80,7 +80,7 @@ export const defaultClientFactory: ClientFactory = ({ clientId, dataPath }) => {
     webVersionCache: { type: 'local', path: path.join(e.dataDir, 'wweb-cache') },
     qrMaxRetries: 8,
     takeoverOnConflict: false,
-    deviceName: 'Techtix WhatsApp',
+    deviceName: 'Chinwag',
     browserName: 'Chrome',
   } as any);
   // Naming the linked device is cosmetic. WhatsApp Web only exposes the module it uses on the

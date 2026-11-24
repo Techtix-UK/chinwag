@@ -32,6 +32,6 @@ export function passwordProblems(password: string, minLength: number, context: s
   for (const c of context) {
     if (c && c.length >= 4 && lower.includes(c.toLowerCase())) problems.push('Password must not contain your name or email');
   }
-  if (/^(.)\1+$/.test(password) || /password|qwerty|123456|techtix|whatsapp/i.test(password)) problems.push('Password is too easy to guess');
+  if (/^(.)\1+$/.test(password) || /password|qwerty|123456|chinwag|techtix|whatsapp/i.test(password)) problems.push('Password is too easy to guess');
   return [...new Set(problems)];
 }

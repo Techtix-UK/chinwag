@@ -166,7 +166,7 @@ export async function systemStatus(detailed: boolean) {
   const availMem = await availableMemory();
   return {
     ...base,
-    application: { name: 'Techtix WhatsApp', version: pkgVersion('@techtix-whatsapp/server') ?? '1.0.0', environment: env().NODE_ENV, pid: process.pid },
+    application: { name: 'Chinwag', version: pkgVersion('@chinwag/server') ?? '1.0.0', environment: env().NODE_ENV, pid: process.pid },
     versions: { node: process.version, whatsapp_web_js: pkgVersion('whatsapp-web.js'), puppeteer: pkgVersion('puppeteer'), mcp_sdk: pkgVersion('@modelcontextprotocol/sdk'), chromium: chromium.version, chromium_path: chromium.path, chromium_error: chromium.error ?? null },
     host: {
       hostname: os.hostname(),

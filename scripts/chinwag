@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# chinwag — command-line management for a Chinwag server.
+set -Eeuo pipefail
+SCRIPTS="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+source "$SCRIPTS/lib.sh"
+
+usage() {
+  cat <<USAGE
+${C_BOLD}chinwag${C_RESET} — manage your Chinwag server
+
+  status                 Process status and health
+  logs [-f] [N]          Show the last N log lines (default 100); -f to follow
+  start | stop | restart Control the service
+  update [--ref REF]     Update to the latest release (backs up the database first)
+  backup [--stop] [--db-only] [--keep N]
+                         Encrypted backup of database, sessions, media and .env
+  restore FILE           Restore from an encrypted backup
+  doctor                 Check the installation end to end
+  setup-token            Show the one-time setup token (before setup is completed)
+  reset-password EMAIL   Set a new password for a user and sign them out everywhere
+  unlock EMAIL           Clear a login lockout
+  admins                 List administrator accounts
+  version                Show the installed version
+USAGE
+}
+
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  status)
+    require_root; load_install_config
+    pm2_service describe "$PM2_NAME" 2>/dev/null | grep -E "status|uptime|restarts|memory|script path" | sed 's/│//g' || warn "Process $PM2_NAME not found"
+    port="$(env_get PORT)"; curl -fsS "http://127.0.0.1:${port:-3100}/api/v1/health" && echo ;;
+  logs)
+    require_root; load_install_config
+    if [[ "${1:-}" == "-f" ]]; then pm2_service logs "$PM2_NAME" --lines "${2:-50}"; else pm2_service logs "$PM2_NAME" --lines "${1:-100}" --nostream; fi ;;
+  start|stop|restart)
+    require_root; load_install_config
+    if [[ "$cmd" == start ]] && ! pm2_service describe "$PM2_NAME" >/dev/null 2>&1; then
+      (cd "$APP_DIR" && as_service env CHINWAG_PM2_NAME="$PM2_NAME" CHINWAG_LOG_DIR="$LOG_DIR" pm2 start ecosystem.config.cjs >/dev/null)
+    else pm2_service "$cmd" "$PM2_NAME" >/dev/null; fi
+    pm2_service save >/dev/null; ok "$cmd: done" ;;
+  update) exec bash "$SCRIPTS/update.sh" "$@" ;;
+  backup) exec bash "$SCRIPTS/backup.sh" "$@" ;;
+  restore) exec bash "$SCRIPTS/restore.sh" "$@" ;;
+  doctor) exec bash "$SCRIPTS/doctor.sh" "$@" ;;
+  setup-token)
+    require_root; load_install_config
+    t="$(env_get SETUP_TOKEN)"; [[ -z "$t" && -f "$DATA_DIR/setup-token" ]] && t="$(cat "$DATA_DIR/setup-token")"
+    [[ -n "$t" ]] && echo "$t" || warn "No setup token (setup is probably complete)." ;;
+  reset-password)
+    require_root; load_install_config
+    [[ -n "${1:-}" ]] || die "Usage: chinwag reset-password EMAIL"
+    read -r -s -p "New password (12+ characters, leave empty to generate one): " pw </dev/tty; echo
+    generated=0
+    if [[ -z "$pw" ]]; then pw="$(openssl rand -base64 18 | tr -d '/+=')Aa1!"; generated=1; fi
+    (cd "$APP_DIR/server" && as_service env CHINWAG_NEW_PASSWORD="$pw" node --env-file=../.env dist/cli/admin.js reset-password "$1")
+    [[ $generated == 1 ]] && printf 'Generated password: %s%s%s\n' "$C_BOLD" "$pw" "$C_RESET" ;;
+  unlock) require_root; load_install_config; (cd "$APP_DIR/server" && as_service node --env-file=../.env dist/cli/admin.js unlock "${1:?email required}") ;;
+  admins) require_root; load_install_config; (cd "$APP_DIR/server" && as_service node --env-file=../.env dist/cli/admin.js list-admins) ;;
+  version) load_install_config; echo "Chinwag $(app_version) ($(git -C "$APP_DIR" describe --tags --always 2>/dev/null || echo unknown))" ;;
+  help|-h|--help) usage ;;
+  *) usage; exit 1 ;;
+esac

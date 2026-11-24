@@ -1,119 +1,108 @@
-# Techtix WhatsApp
+<p align="center">
+  <img src="branding/chinwag-mark.svg" width="96" height="96" alt="Chinwag">
+</p>
 
-Self-hosted administration platform, REST API and remote MCP server for managing multiple WhatsApp
-accounts through **WhatsApp Web linked-device sessions**. Developed by **Techtix Global**.
+<h1 align="center">Chinwag</h1>
 
-> **Unofficial integration.** Techtix WhatsApp uses [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js),
-> an unofficial library that automates WhatsApp Web in Chromium. It is not affiliated with, endorsed by or a
-> product of WhatsApp or Meta. WhatsApp Web changes can break it without notice and WhatsApp may restrict
-> accounts it considers automated. No Meta Business API, Cloud API, developer account or access token is used.
-> Do not use it for unsolicited or bulk messaging.
+<p align="center">
+  <strong>Your WhatsApp, on your server, ready for AI.</strong><br>
+  A self-hosted team inbox, REST API and MCP server for WhatsApp — connect ChatGPT and your own apps to all of your WhatsApp numbers, with approvals, audit logs and per-account permissions.
+</p>
 
-## Features
+<p align="center">
+  <a href="https://techtix-uk.github.io/chinwag/"><b>Documentation</b></a> ·
+  <a href="https://techtix-uk.github.io/chinwag/guide/installation">Install</a> ·
+  <a href="https://techtix-uk.github.io/chinwag/integrations/chatgpt">ChatGPT setup</a> ·
+  <a href="https://github.com/Techtix-UK/chinwag/releases">Releases</a>
+</p>
 
-| Area | What you get |
-|---|---|
-| Accounts | Unlimited\* simultaneous accounts, QR pairing with live refresh, isolated `LocalAuth` session per account, connect / disconnect / restart / re-authenticate / log out / remove, diagnostics and per-session Chromium resource usage, controlled auto-recovery with back-off and a hard retry limit |
-| Inbox | Real-time conversation list and chat view (Socket.IO), filters (unread, individuals, groups, archived, account), search by name / number / group / synchronised message text, media (images, video, audio, voice notes, documents, stickers, locations), quoted replies, reactions, delivery/read ticks, lazy history loading plus "load older from WhatsApp", drafts, emoji, attachments, scheduling |
-| Sync | Chats, contacts, messages, acks, edits, deletions, reactions, group metadata and participants; duplicate-safe on `(account_id, wa_message_id)`; per-chat sync state (full / partial / unavailable); configurable initial limits and automatic media download |
-| Contacts | Per-account directory (never merged across accounts), tags, notes, WhatsApp number validation |
-| Scheduling | Database-backed scheduler (no Redis), survives restarts, edit / reschedule / cancel, expiry policy for disconnected accounts, *never* retries when delivery is uncertain |
-| Approvals | Read-only / require-approval / direct policies per integration; approval binds to the exact payload hash and recipient; edits need renewed approval |
-| REST API | `/api/v1`, scoped hashed API keys with expiry/rotation/revocation, idempotency keys, rate limiting, pagination, OpenAPI 3.1 + authenticated Swagger UI at `/api/docs` |
-| MCP | Streamable HTTP server at `/mcp` (official TypeScript SDK) with 32 tools, strict schemas, structured output, accurate annotations, OAuth 2.1 (PKCE S256, dynamic client registration, client ID metadata documents, refresh-token rotation with reuse detection, revocation, consent screen, scoped account grants) |
-| Webhooks | 12 event types, HMAC-SHA256 signatures, persistent delivery queue with retries, history, redelivery, test button, SSRF protection |
-| Administration | Roles (Super Administrator, Administrator, Messaging Agent, Read-only, Integration Client), per-account READ / SEND / MANAGE access, activity log, system health, settings, first-run setup wizard, light/dark themes |
+<p align="center">
+  <a href="https://github.com/Techtix-UK/chinwag/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Techtix-UK/chinwag/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/badge/licence-AGPL--3.0-EF3C00"></a>
+  <img alt="Node 22" src="https://img.shields.io/badge/node-22-07182C">
+  <img alt="Debian / Ubuntu" src="https://img.shields.io/badge/runs%20on-Debian%20%7C%20Ubuntu-07182C">
+</p>
 
-\* limited by the configured maximum and server capacity (each account runs its own Chromium, ~250–400 MB RAM).
+<p align="center">
+  <img src="docs/public/screenshots/inbox.png" alt="Chinwag inbox" width="900">
+</p>
 
-## Stack
+## Why Chinwag?
 
-Node.js 22 · TypeScript · Express 5 · whatsapp-web.js (Puppeteer + system Chromium) · MySQL/MariaDB via Prisma 7 ·
-React 19 + Vite + Tailwind CSS 4 + shadcn-style Radix components · Socket.IO · MCP TypeScript SDK · PM2.
-No Docker, Redis or paid services.
+- 📱 **Many numbers, one inbox.** Link personal and Business WhatsApp accounts by QR code. Each runs in its own isolated session that survives restarts.
+- 🤖 **ChatGPT & MCP built in.** A standards-based remote MCP server with OAuth 2.1 — ask ChatGPT to find conversations, summarise customers or draft replies.
+- ✅ **You stay in control.** Confirm every message in ChatGPT, approve it in the dashboard, or allow direct sending — per connection. Recipients and accounts are never guessed.
+- 🔌 **REST API & webhooks.** Scoped API keys, idempotent sends, OpenAPI docs, HMAC-signed webhooks.
+- 🗓️ **Scheduling that survives restarts**, with timezones and no risky automatic retries.
+- 🔐 **Secure by default.** Argon2id, CSRF protection, roles with per-account access, audit logs, encrypted backups, SSRF guards, sandboxed browser.
+- 🏠 **Your data stays yours.** Runs on your server with MariaDB/MySQL. No Docker, Redis or paid services required.
 
-## Repository layout
+## Install
 
-```
-.
-├── server/                    Node.js application (Express, WhatsApp, MCP, OAuth, workers)
-│   ├── prisma/                schema.prisma and version-controlled migrations
-│   └── src/
-│       ├── config/            environment validation
-│       ├── db/                Prisma client (MariaDB driver adapter)
-│       ├── whatsapp/          session manager, event → database sync, mapping
-│       ├── services/          domain logic: permissions, outbound pipeline, approvals, scheduler, webhooks, media, audit…
-│       ├── http/              route helper (Zod validation + OpenAPI), middleware, REST routes
-│       ├── oauth/             OAuth 2.1 provider for the SDK auth router
-│       ├── mcp/               MCP tools and Streamable HTTP endpoint
-│       ├── realtime/          Socket.IO channel
-│       └── test/              Vitest suites (whatsapp-web.js mocked)
-├── web/                       React dashboard (built into web/dist and served by the server)
-├── deploy/                    Apache / Nginx / DirectAdmin examples, shared script helpers
-├── docs/                      Deployment, MCP, API, backup, security, troubleshooting, manual test checklist
-├── install.sh update.sh backup.sh restore.sh
-├── ecosystem.config.cjs       PM2 (single fork-mode instance)
-└── .env.example
-```
-
-## Quick start (production, Debian)
+On a fresh **Debian 12+ / Ubuntu 22.04+** server with a domain pointing at it:
 
 ```bash
-sudo git clone <repository> /opt/techtix-whatsapp
-cd /opt/techtix-whatsapp
-sudo ./install.sh            # interactive; never edits Apache/Nginx/DirectAdmin/firewall/MySQL config
+curl -fsSL https://raw.githubusercontent.com/Techtix-UK/chinwag/main/install.sh | sudo bash
 ```
 
-Then configure the reverse proxy and HTTPS ([docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)), open
-`https://whatsapp.techtixglobal.com/setup`, enter the installation token and complete the wizard.
-
-## Local development
+The installer sets up Node.js, a browser, MariaDB, HTTPS (Caddy or Nginx + Let's Encrypt, or a Cloudflare Tunnel), PM2 and the `chinwag` management command, then prints your setup link. Unattended:
 
 ```bash
-cp .env.example .env               # set DATABASE_URL, APP_ENCRYPTION_KEY, BASE_URL=http://localhost:3100,
-                                   # HOST=127.0.0.1, DATA_DIR=./.data, CHROMIUM_PATH (e.g. Google Chrome)
+curl -fsSL https://raw.githubusercontent.com/Techtix-UK/chinwag/main/install.sh | sudo bash -s -- \
+  --domain chat.example.com --email ops@example.com --proxy caddy --yes
+```
+
+→ [Installation guide](https://techtix-uk.github.io/chinwag/guide/installation) · [Requirements](https://techtix-uk.github.io/chinwag/guide/requirements) · [Reverse proxy](https://techtix-uk.github.io/chinwag/guide/reverse-proxy)
+
+## Connect ChatGPT
+
+1. ChatGPT → **Settings → Apps & Connectors → Create** (developer mode).
+2. MCP server URL `https://chat.example.com/mcp`, authentication **OAuth**.
+3. Sign in to Chinwag, choose the accounts, permissions and how messages are confirmed.
+4. *"Show my unread WhatsApp messages on the UK account."*
+
+→ [ChatGPT guide](https://techtix-uk.github.io/chinwag/integrations/chatgpt) · [MCP tools](https://techtix-uk.github.io/chinwag/integrations/mcp-tools)
+
+## Manage
+
+```bash
+sudo chinwag status          # health and process status
+sudo chinwag logs -f         # follow logs
+sudo chinwag update          # back up, update, migrate, restart
+sudo chinwag backup --stop   # encrypted backup of database, sessions, media and .env
+sudo chinwag doctor          # end-to-end checks
+```
+
+<table>
+  <tr>
+    <td><img src="docs/public/screenshots/overview.png" alt="Overview"></td>
+    <td><img src="docs/public/screenshots/approvals.png" alt="Message approvals"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/public/screenshots/inbox-dark.png" alt="Inbox, dark mode"></td>
+    <td><img src="docs/public/screenshots/accounts-dark.png" alt="WhatsApp accounts, dark mode"></td>
+  </tr>
+</table>
+
+## Development
+
+```bash
+git clone https://github.com/Techtix-UK/chinwag.git && cd chinwag
+cp .env.example .env        # BASE_URL=http://localhost:3100, DATABASE_URL, APP_ENCRYPTION_KEY, CHROMIUM_PATH, DATA_DIR=./.data
 npm ci
-npm run db:migrate -w server       # prisma migrate dev
-npm run dev -w server              # API on :3100
-npm run dev -w web                 # dashboard on :5173 (proxies to :3100)
+npm run db:migrate          # prisma migrate dev
+npm run dev -w server       # API on :3100
+npm run dev -w web          # dashboard on :5173
+npm run docs:dev            # documentation site
+TEST_DATABASE_URL=mysql://chinwag:chinwag@127.0.0.1:3306/chinwag_test npm test
 ```
 
-## Environment
+Tests mock whatsapp-web.js; live behaviour is covered by the [manual test checklist](https://techtix-uk.github.io/chinwag/operations/manual-testing). See [CONTRIBUTING.md](CONTRIBUTING.md) and the [architecture overview](https://techtix-uk.github.io/chinwag/reference/architecture).
 
-See [.env.example](.env.example). Required: `DATABASE_URL`, `APP_ENCRYPTION_KEY` (32 bytes), `BASE_URL`.
-Important: `DATA_DIR` (sessions, media), `CHROMIUM_PATH`, `HOST`/`PORT`, `TRUST_PROXY`, `SETUP_TOKEN`.
-General settings (timezone, retention, limits, approval policy…) are edited in **Settings** and stored in the database.
+## Important
 
-## Database
+Chinwag drives WhatsApp Web through the open-source [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) library. **It is not affiliated with, endorsed by, or an official product of WhatsApp or Meta.** WhatsApp Web changes can break it until the library catches up, and WhatsApp may restrict accounts it considers automated. Use it for conversations people expect — never for bulk or unsolicited messaging.
 
-```bash
-cd server
-npx prisma migrate deploy          # apply migrations (production)
-npx prisma migrate status
-```
+## Licence
 
-The database must use `utf8mb4`. All timestamps are stored in UTC and shown in each user's timezone.
-
-## Tests
-
-```bash
-# needs a disposable MySQL/MariaDB database; defaults to techtix_whatsapp_test on localhost
-TEST_DATABASE_URL=mysql://user:pass@127.0.0.1:3306/techtix_whatsapp_test npm test
-```
-
-The suites mock whatsapp-web.js. Live WhatsApp behaviour must be verified with [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md).
-
-## Documentation
-
-- [Deployment, DirectAdmin, HTTPS, Chromium](docs/DEPLOYMENT.md)
-- [Connecting ChatGPT / MCP clients](docs/MCP.md)
-- [REST API](docs/API.md) — full reference at `/api/docs`
-- [Backup and restore](docs/BACKUP.md)
-- [Security model](docs/SECURITY.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Manual integration test checklist](docs/MANUAL_TESTING.md)
-- [Known limitations](docs/LIMITATIONS.md)
-
-## Browser support
-
-The dashboard targets evergreen browsers released since mid-2024 (it uses CSS `light-dark()` and `:has()`).
+[AGPL-3.0](LICENSE) © [Techtix Global](https://techtixglobal.com). You may self-host and modify Chinwag freely; if you offer a modified version as a network service, you must make your source available. Security issues: see [SECURITY.md](SECURITY.md).

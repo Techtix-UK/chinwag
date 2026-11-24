@@ -34,7 +34,7 @@ export type Settings = z.infer<typeof settingsSchema>;
 
 export function defaultSettings(): Settings {
   return {
-    appName: 'Techtix WhatsApp',
+    appName: 'Chinwag',
     logoUrl: null,
     baseUrl: env().baseUrl.toString().replace(/\/$/, ''),
     defaultTimezone: 'Europe/London',

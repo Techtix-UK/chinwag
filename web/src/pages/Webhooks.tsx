@@ -26,7 +26,7 @@ function Editor({ hook, onClose }: { hook: any | null; onClose: () => void }) {
         <DialogHeader title={secret ? 'Webhook created' : hook ? 'Edit webhook' : 'Create webhook'} description={secret ? undefined : 'Payloads are signed with HMAC-SHA256. Private and local network destinations are blocked unless allowed by the deployment policy.'} />
         {secret ? (
           <>
-            <SecretReveal label="Signing secret" value={secret} note="Verify X-Techtix-Signature: t=<timestamp>,v1=HMAC_SHA256(secret, `${timestamp}.${rawBody}`)" />
+            <SecretReveal label="Signing secret" value={secret} note="Verify X-Chinwag-Signature: t=<timestamp>,v1=HMAC_SHA256(secret, `${timestamp}.${rawBody}`)" />
             <DialogFooter><Button onClick={onClose}>Done</Button></DialogFooter>
           </>
         ) : (
@@ -127,7 +127,7 @@ export default function Webhooks() {
       <Card className="mt-4">
         <CardContent className="text-[13px] text-muted">
           <p className="font-medium text-foreground">Verifying signatures</p>
-          <p className="mt-1">Each request carries <code>X-Techtix-Event</code>, <code>X-Techtix-Event-Id</code> (deduplicate on this), <code>X-Techtix-Timestamp</code> and <code>X-Techtix-Signature: t=…,v1=…</code>. Compute HMAC-SHA256 over <code>{'`${t}.${rawBody}`'}</code> with your signing secret, compare in constant time and reject timestamps older than five minutes.</p>
+          <p className="mt-1">Each request carries <code>X-Chinwag-Event</code>, <code>X-Chinwag-Event-Id</code> (deduplicate on this), <code>X-Chinwag-Timestamp</code> and <code>X-Chinwag-Signature: t=…,v1=…</code>. Compute HMAC-SHA256 over <code>{'`${t}.${rawBody}`'}</code> with your signing secret, compare in constant time and reject timestamps older than five minutes.</p>
         </CardContent>
       </Card>
       {edit && <Editor hook={edit === 'new' ? null : edit} onClose={() => setEdit(null)} />}

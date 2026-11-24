@@ -16,7 +16,7 @@ const { startRuntime, stopRuntime } = await import('./runtime.js');
 
 async function main() {
   if (env().isProduction && process.getuid?.() === 0 && process.env.ALLOW_ROOT !== 'true') {
-    throw new Error('Refusing to run as root. Run Techtix WhatsApp as its dedicated service user (see docs/DEPLOYMENT.md).');
+    throw new Error('Refusing to run as root. Run Chinwag as its dedicated service user (see https://techtix-uk.github.io/chinwag/guide/installation).');
   }
   for (const dir of [env().dataDir, env().sessionsDir, env().mediaDir, env().tmpDir]) {
     await fs.mkdir(dir, { recursive: true, mode: 0o700 });
@@ -31,7 +31,7 @@ async function main() {
   attachRealtime(server);
 
   await new Promise<void>((resolve) => server.listen(env().PORT, env().HOST, resolve));
-  log.info(`Techtix WhatsApp listening on http://${env().HOST}:${env().PORT} (public URL ${env().baseUrl.origin})`);
+  log.info(`Chinwag listening on http://${env().HOST}:${env().PORT} (public URL ${env().baseUrl.origin})`);
 
   if (await isSetupComplete()) {
     await startRuntime();

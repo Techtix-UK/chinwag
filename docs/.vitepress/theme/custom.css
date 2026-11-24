@@ -1,0 +1,28 @@
+/* Chinwag / Techtix brand — Orange #EF3C00, Carbon #212121, Midnight #07182C */
+:root {
+  --vp-c-brand-1: #c83200;
+  --vp-c-brand-2: #e03800;
+  --vp-c-brand-3: #c83200;
+  --vp-c-brand-soft: rgba(239, 60, 0, 0.12);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #ef3c00 20%, #ff7a45);
+  --vp-home-hero-image-background-image: radial-gradient(circle, rgba(239, 60, 0, 0.35) 0%, rgba(7, 24, 44, 0) 70%);
+  --vp-home-hero-image-filter: blur(56px);
+  --vp-button-brand-bg: #c83200;
+  --vp-button-brand-hover-bg: #a92a00;
+}
+.dark {
+  --vp-c-bg: #07182c;
+  --vp-c-bg-alt: #0a1d33;
+  --vp-c-bg-soft: #0f243d;
+  --vp-c-bg-elv: #0c2038;
+  --vp-c-brand-1: #ff6a33;
+  --vp-c-brand-2: #ff7a45;
+  --vp-c-brand-3: #ef3c00;
+  --vp-button-brand-bg: #ef3c00;
+  --vp-button-brand-text: #07182c;
+  --vp-button-brand-hover-bg: #ff6a33;
+  --vp-button-brand-hover-text: #07182c;
+}
+.VPHero .image-src { max-width: 280px; }
+.vp-doc table { font-size: 14px; }
