@@ -48,6 +48,36 @@ function toClientInfo(c: OAuthClient): OAuthClientInformationFull {
 
 const CIMD_REFRESH_MS = 24 * 3600_000;
 
+/**
+ * Validate a Client ID Metadata Document and map it to a stored client.
+ * Clients are treated as public clients protected by PKCE. A document may prefer private_key_jwt
+ * (as ChatGPT's does) as long as it also lists "none" among supported methods; this server only
+ * advertises "none" and "client_secret_post", so such clients authenticate as public clients.
+ */
+export function clientFromMetadataDocument(clientId: string, doc: any) {
+  if (!doc || typeof doc !== 'object') throw new Error('Document is not a JSON object');
+  if (doc.client_id !== clientId) throw new Error('client_id in document does not match its URL');
+  const redirectUris: string[] = Array.isArray(doc.redirect_uris) ? doc.redirect_uris.filter((u: unknown) => typeof u === 'string' && URL.canParse(u) && /^https:\/\//.test(u as string)) : [];
+  if (!redirectUris.length) throw new Error('Document has no https redirect_uris');
+  const method = doc.token_endpoint_auth_method ?? 'none';
+  const supported: unknown[] = Array.isArray(doc.token_endpoint_auth_methods_supported) ? doc.token_endpoint_auth_methods_supported : [method];
+  if (method !== 'none' && !supported.includes('none')) {
+    throw new Error(`Client requires ${method} authentication, which this server does not support for metadata documents`);
+  }
+  return {
+    clientName: typeof doc.client_name === 'string' ? doc.client_name.slice(0, 250) : null,
+    clientUri: typeof doc.client_uri === 'string' ? doc.client_uri.slice(0, 500) : null,
+    logoUri: typeof doc.logo_uri === 'string' ? doc.logo_uri.slice(0, 500) : null,
+    redirectUris,
+    grantTypes: Array.isArray(doc.grant_types) ? doc.grant_types : ['authorization_code', 'refresh_token'],
+    responseTypes: Array.isArray(doc.response_types) ? doc.response_types : ['code'],
+    tokenEndpointAuthMethod: 'none',
+    scope: typeof doc.scope === 'string' ? doc.scope.slice(0, 1000) : null,
+    registrationType: 'metadata_document',
+    metadata: doc,
+  };
+}
+
 /** Client ID Metadata Documents: the client_id is an HTTPS URL that serves the client's metadata. */
 async function resolveMetadataDocumentClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
   let url: URL;
@@ -64,23 +94,7 @@ async function resolveMetadataDocumentClient(clientId: string): Promise<OAuthCli
   try {
     const res = await safeFetch(clientId, { maxBytes: 16 * 1024, timeoutMs: 8000, headers: { accept: 'application/json' } });
     if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
-    const doc = JSON.parse(res.body.toString('utf8'));
-    if (doc.client_id !== clientId) throw new Error('client_id in document does not match its URL');
-    const redirectUris = Array.isArray(doc.redirect_uris) ? doc.redirect_uris.filter((u: unknown) => typeof u === 'string' && URL.canParse(u)) : [];
-    if (!redirectUris.length) throw new Error('Document has no redirect_uris');
-    if (doc.token_endpoint_auth_method && doc.token_endpoint_auth_method !== 'none') throw new Error('Only public clients are supported for metadata documents');
-    const data = {
-      clientName: typeof doc.client_name === 'string' ? doc.client_name.slice(0, 250) : null,
-      clientUri: typeof doc.client_uri === 'string' ? doc.client_uri.slice(0, 500) : null,
-      logoUri: typeof doc.logo_uri === 'string' ? doc.logo_uri.slice(0, 500) : null,
-      redirectUris,
-      grantTypes: doc.grant_types ?? ['authorization_code', 'refresh_token'],
-      responseTypes: doc.response_types ?? ['code'],
-      tokenEndpointAuthMethod: 'none',
-      scope: typeof doc.scope === 'string' ? doc.scope.slice(0, 1000) : null,
-      registrationType: 'metadata_document',
-      metadata: doc,
-    };
+    const data = clientFromMetadataDocument(clientId, JSON.parse(res.body.toString('utf8')));
     const row = await prisma().oAuthClient.upsert({ where: { clientId }, create: { clientId, ...data }, update: data });
     return toClientInfo(row);
   } catch (e) {
