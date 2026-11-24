@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { getSocket, resetSocket, useSocketEvent } from '@/lib/socket';
 import { useThemePref } from '@/lib/theme';
 import { cn } from '@/lib/utils';
+import { ProductLockup, TechtixIcon } from '../Brand';
 import { Avatar, Tooltip } from '../ui/misc';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown';
@@ -47,14 +48,9 @@ const NAV: { section?: string; items: NavItem[] }[] = [
 function Logo({ collapsed }: { collapsed: boolean }) {
   const { me } = useAuth();
   return (
-    <div className="flex h-14 items-center gap-2.5 px-3.5">
-      {me?.app.logo_url ? <img src={me.app.logo_url} alt="" className="size-7 rounded" /> : <img src="/favicon.svg" alt="" className="size-7" />}
-      {!collapsed && (
-        <div className="leading-tight">
-          <p className="text-[13px] font-semibold">{me?.app.name ?? 'Techtix WhatsApp'}</p>
-          <p className="text-[11px] text-muted">by Techtix Global</p>
-        </div>
-      )}
+    <div className={cn('flex h-14 items-center px-3.5', collapsed && 'justify-center px-0')}>
+      {collapsed ? <TechtixIcon className="size-6" /> : <ProductLockup customUrl={me?.app.logo_url} />}
+      <span className="sr-only">{me?.app.name ?? 'Techtix WhatsApp'}</span>
     </div>
   );
 }
