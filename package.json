@@ -1,0 +1,33 @@
+{
+  "name": "techtix-whatsapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Techtix WhatsApp — self-hosted multi-account WhatsApp Web management, REST API and remote MCP server. Developed by Techtix Global.",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "npm run dev -w server & npm run dev -w web",
+    "build": "npm run build -w web && npm run build -w server",
+    "start": "npm run start -w server",
+    "test": "npm run test -w server",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:deploy": "npm run db:deploy -w server"
+  },
+  "allowScripts": {
+    "argon2@0.45.2": true,
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true,
+    "esbuild@0.28.2": true,
+    "@scarf/scarf": false,
+    "puppeteer": false,
+    "fsevents": false,
+    "github:pedroslopez/whatsapp-web.js": false
+  }
+}

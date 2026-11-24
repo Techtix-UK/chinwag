@@ -1,0 +1,12 @@
+.shipstudio/
+node_modules/
+dist/
+.env
+.data/
+server/src/generated/
+web/dist/
+*.log
+.wwebjs_cache/
+.wwebjs_auth/
+coverage/
+backups/
