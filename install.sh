@@ -28,15 +28,33 @@ if ! command -v node >/dev/null || ! node -e 'const [a,b]=process.versions.node.
 fi
 c_info "Node.js $(node -v)"
 
-# ── 2. Chromium and runtime libraries ───────────────────────────────────────
-if ! command -v chromium >/dev/null && ! command -v chromium-browser >/dev/null; then
-  if confirm "Install Debian's Chromium and fonts (apt: chromium fonts-liberation fonts-noto-color-emoji)?"; then
+# ── 2. Chromium / Google Chrome ─────────────────────────────────────────────
+# Snap-packaged Chromium (Ubuntu's default) cannot be driven by a background service user, so it is never used.
+is_snap() { [[ "$(readlink -f "$1" 2>/dev/null)" == /snap/* ]] || grep -qs 'snap' "$1" 2>/dev/null; }
+find_browser() {
+  for b in google-chrome-stable chromium; do
+    local p; p="$(command -v "$b" || true)"
+    if [[ -n "$p" ]] && ! is_snap "$p"; then echo "$p"; return; fi
+  done
+}
+CHROMIUM_BIN="$(find_browser)"
+if [[ -z "$CHROMIUM_BIN" ]]; then
+  . /etc/os-release
+  if [[ "${ID:-}" == "ubuntu" ]]; then
+    if confirm "Install Google Chrome stable from Google's apt repository (Ubuntu's chromium is a snap and cannot be used)?"; then
+      install -d -m 0755 /etc/apt/keyrings
+      curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor --yes -o /etc/apt/keyrings/google-chrome.gpg
+      echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" >/etc/apt/sources.list.d/google-chrome.list
+      apt-get update && apt-get install -y google-chrome-stable fonts-liberation fonts-noto-color-emoji
+    fi
+  elif confirm "Install Debian's Chromium and fonts (apt: chromium fonts-liberation fonts-noto-color-emoji)?"; then
     apt-get update && apt-get install -y chromium fonts-liberation fonts-noto-color-emoji ca-certificates
-  else
-    c_warn "Chromium not installed — WhatsApp accounts cannot connect until it is (see docs/DEPLOYMENT.md)."
   fi
+  CHROMIUM_BIN="$(find_browser)"
+  [[ -n "$CHROMIUM_BIN" ]] || c_warn "No usable Chrome/Chromium installed — WhatsApp accounts cannot connect until it is (see docs/DEPLOYMENT.md)."
 fi
-CHROMIUM_BIN="$(command -v chromium || command -v chromium-browser || echo /usr/bin/chromium)"
+CHROMIUM_BIN="${CHROMIUM_BIN:-/usr/bin/google-chrome-stable}"
+c_info "Browser: $CHROMIUM_BIN"
 
 # Chromium's sandbox needs unprivileged user namespaces.
 if [[ -f /proc/sys/kernel/unprivileged_userns_clone ]] && [[ "$(cat /proc/sys/kernel/unprivileged_userns_clone)" != "1" ]]; then
