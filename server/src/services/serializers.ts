@@ -160,6 +160,8 @@ export function serializeApproval(a: MessageApproval) {
     payload_hash: a.payloadHash,
     scheduled_message_id: a.scheduledMessageId,
     status: a.status.toLowerCase(),
+    confirm_mode: a.confirmMode,
+    expires_at: iso(a.expiresAt),
     requested_by: { type: a.requestedByType, id: a.requestedById, label: a.requestedByLabel },
     decided_by_user_id: a.decidedByUserId,
     decision_note: a.decisionNote,

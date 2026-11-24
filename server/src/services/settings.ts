@@ -20,7 +20,7 @@ export const settingsSchema = z.object({
   autoDownloadMedia: z.boolean(),
   connectionRetryLimit: z.number().int().min(0).max(50),
   scheduledExpiryMinutes: z.number().int().min(1).max(10080),
-  defaultApprovalPolicy: z.enum(['READ_ONLY', 'REQUIRE_APPROVAL', 'DIRECT']),
+  defaultApprovalPolicy: z.enum(['READ_ONLY', 'REQUIRE_APPROVAL', 'CONFIRM_IN_CHAT', 'CONFIRM_IN_CHAT_OR_DASHBOARD', 'DIRECT']),
   apiRateLimitPerMinute: z.number().int().min(1).max(10000),
   auditRetentionDays: z.number().int().min(0).max(36500),
   loginMaxAttempts: z.number().int().min(3).max(50),

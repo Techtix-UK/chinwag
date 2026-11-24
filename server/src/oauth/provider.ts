@@ -287,7 +287,7 @@ export async function loadRequest(id: string) {
 export async function completeConsent(
   principal: Principal,
   id: string,
-  decision: { approve: boolean; scopes: string[]; accountIds: string[]; approvalPolicy: 'READ_ONLY' | 'REQUIRE_APPROVAL' | 'DIRECT' },
+  decision: { approve: boolean; scopes: string[]; accountIds: string[]; approvalPolicy: 'READ_ONLY' | 'REQUIRE_APPROVAL' | 'CONFIRM_IN_CHAT' | 'CONFIRM_IN_CHAT_OR_DASHBOARD' | 'DIRECT' },
 ): Promise<string> {
   const loaded = await loadRequest(id);
   if (!loaded) throw new AccessDeniedError('Authorization request expired or not found');

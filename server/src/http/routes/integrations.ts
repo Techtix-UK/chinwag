@@ -12,6 +12,8 @@ import { MCP_TOOL_NAMES } from '../../mcp/server.js';
 import { route } from '../route.js';
 
 const policy = z.enum(['READ_ONLY', 'REQUIRE_APPROVAL', 'DIRECT']);
+/** MCP connections can also confirm in the chat client itself. */
+const mcpPolicy = z.enum(['READ_ONLY', 'REQUIRE_APPROVAL', 'CONFIRM_IN_CHAT', 'CONFIRM_IN_CHAT_OR_DASHBOARD', 'DIRECT']);
 const idParam = z.object({ id: z.string().min(1).max(64) });
 
 export function integrationRoutes(r: Router) {
@@ -110,7 +112,7 @@ export function integrationRoutes(r: Router) {
 
   route(r, {
     method: 'patch', path: '/mcp/connections/:id', summary: 'Change a connection approval policy or accounts', tags: ['MCP'], auth: 'session', capability: 'integrations:manage', internal: true, params: idParam,
-    body: z.object({ approval_policy: policy.optional(), account_ids: z.array(z.string().max(40)).optional() }),
+    body: z.object({ approval_policy: mcpPolicy.optional(), account_ids: z.array(z.string().max(40)).optional() }),
     handler: async ({ principal, params, body }) => {
       const g = await prisma().oAuthAuthorisation.findUnique({ where: { id: params.id } });
       if (!g || g.revokedAt) throw notFound('Active connection');
@@ -186,7 +188,9 @@ export function integrationRoutes(r: Router) {
         client: { client_id: client.client_id, name: client.client_name ?? 'Unnamed client', client_uri: client.client_uri ?? null, logo_uri: client.logo_uri ?? null, redirect_host: new URL(req.redirectUri).host },
         requested_scopes: (req.scopes as string[]).map((s) => ({ scope: s, description: SCOPE_DESCRIPTIONS[s as keyof typeof SCOPE_DESCRIPTIONS] ?? s, grantable: requested.includes(s) })),
         accounts: accounts.map((a) => ({ id: a.id, display_name: a.displayName, phone_number: a.phoneNumber ? '+' + a.phoneNumber : null, status: a.status.toLowerCase() })),
-        approval_policies: can(principal, 'integrations:manage') ? ['REQUIRE_APPROVAL', 'READ_ONLY', 'DIRECT'] : ['REQUIRE_APPROVAL', 'READ_ONLY'],
+        approval_policies: can(principal, 'integrations:manage')
+          ? ['CONFIRM_IN_CHAT', 'CONFIRM_IN_CHAT_OR_DASHBOARD', 'REQUIRE_APPROVAL', 'READ_ONLY', 'DIRECT']
+          : ['CONFIRM_IN_CHAT', 'CONFIRM_IN_CHAT_OR_DASHBOARD', 'REQUIRE_APPROVAL', 'READ_ONLY'],
         default_policy: settings().defaultApprovalPolicy === 'DIRECT' && !can(principal, 'integrations:manage') ? 'REQUIRE_APPROVAL' : settings().defaultApprovalPolicy,
         expires_at: req.expiresAt,
       };
@@ -195,7 +199,7 @@ export function integrationRoutes(r: Router) {
 
   route(r, {
     method: 'post', path: '/oauth/requests/:id/decision', summary: 'Approve or deny an MCP client', tags: ['OAuth'], auth: 'session-any', internal: true, params: z.object({ id: z.string().min(20).max(64) }),
-    body: z.object({ approve: z.boolean(), scopes: z.array(z.enum(MCP_SCOPES)).default([]), account_ids: z.array(z.string().max(40)).default([]), approval_policy: policy.default('REQUIRE_APPROVAL') }),
+    body: z.object({ approve: z.boolean(), scopes: z.array(z.enum(MCP_SCOPES)).default([]), account_ids: z.array(z.string().max(40)).default([]), approval_policy: mcpPolicy.default('REQUIRE_APPROVAL') }),
     handler: async ({ principal, params, body }) => {
       if (body.approve) {
         if (!body.account_ids.length) throw validationError('Select at least one WhatsApp account');

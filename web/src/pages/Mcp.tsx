@@ -58,7 +58,7 @@ export default function Mcp() {
               <li>ChatGPT registers itself and opens a sign-in window. Sign in here, choose the WhatsApp accounts, permissions and send policy, then allow access.</li>
               <li>Ask: “List my connected WhatsApp accounts.”</li>
             </ol>
-            <p className="mt-3 text-xs text-muted">The server must be reachable over valid HTTPS from the internet. New connections default to requiring approval before any message is sent.</p>
+            <p className="mt-3 text-xs text-muted">The server must be reachable over valid HTTPS from the internet. On the consent screen choose how messages are confirmed: in ChatGPT, in this dashboard, either, read-only or direct. You can change it per connection below.</p>
           </CardContent>
         </Card>
       </div>
@@ -79,7 +79,7 @@ export default function Mcp() {
                   <TD>
                     {c.status === 'active' ? (
                       <NativeSelect className="h-8 w-auto text-xs" value={c.approval_policy.toUpperCase()} onChange={async (e) => { try { await api.patch(`/mcp/connections/${c.id}`, { approval_policy: e.target.value }); qc.invalidateQueries({ queryKey: ['mcp'] }); toast.success('Policy updated'); } catch (err) { toastError(err); } }}>
-                        <option value="REQUIRE_APPROVAL">Require approval</option><option value="READ_ONLY">Read-only</option><option value="DIRECT">Direct sending</option>
+                        <option value="CONFIRM_IN_CHAT">Confirm in ChatGPT</option><option value="CONFIRM_IN_CHAT_OR_DASHBOARD">ChatGPT or dashboard</option><option value="REQUIRE_APPROVAL">Dashboard approval</option><option value="READ_ONLY">Read-only</option><option value="DIRECT">Direct sending</option>
                       </NativeSelect>
                     ) : <span className="text-xs text-muted">{c.approval_policy.replace('_', ' ')}</span>}
                   </TD>

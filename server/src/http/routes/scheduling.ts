@@ -80,9 +80,9 @@ export function schedulingRoutes(r: Router) {
   // ───────────── approvals ─────────────
   route(r, {
     method: 'get', path: '/approvals', summary: 'List message approval requests', tags: ['Approvals'], auth: 'session', capability: 'approvals:review',
-    query: z.object({ status: z.enum(['pending', 'approved', 'rejected', 'superseded', 'executed', 'failed']).optional(), account_id: z.string().max(40).optional(), ...pagination }),
+    query: z.object({ status: z.enum(['pending', 'approved', 'rejected', 'superseded', 'executed', 'failed']).optional(), account_id: z.string().max(40).optional(), include_chat_only: z.enum(['0', '1']).optional(), ...pagination }),
     handler: async ({ principal, query }) => {
-      const res = await approvals.listApprovals(principal, { status: query.status, accountId: query.account_id, limit: query.limit, offset: query.offset });
+      const res = await approvals.listApprovals(principal, { status: query.status, accountId: query.account_id, limit: query.limit, offset: query.offset, includeChatOnly: query.include_chat_only === '1' || query.status !== 'pending' });
       return page(res.items, res.total, query.limit, query.offset);
     },
   });

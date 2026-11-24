@@ -465,6 +465,9 @@ model MessageApproval {
   payloadHash      String          @map("payload_hash") @db.Char(64)
   scheduledMessageId String?       @map("scheduled_message_id")
   status           ApprovalStatus  @default(PENDING)
+  /// dashboard = approved by a reviewer; client = confirmed by the requesting user in the MCP client; either = both allowed
+  confirmMode      String          @default("dashboard") @map("confirm_mode") @db.VarChar(16)
+  expiresAt        DateTime?       @map("expires_at")
   requestedByType  String          @map("requested_by_type") @db.VarChar(32)
   requestedById    String          @map("requested_by_id") @db.VarChar(64)
   requestedByLabel String?         @map("requested_by_label") @db.VarChar(191)
@@ -487,6 +490,8 @@ model MessageApproval {
 enum ApprovalPolicy {
   READ_ONLY
   REQUIRE_APPROVAL
+  CONFIRM_IN_CHAT
+  CONFIRM_IN_CHAT_OR_DASHBOARD
   DIRECT
 }
 

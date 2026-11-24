@@ -144,7 +144,34 @@ export function payloadHash(p: OutboundPayload): string {
 
 export type SendOutcome =
   | { status: 'sent'; message: ReturnType<typeof serializeMessage> | null; wa_message_id: string | null }
-  | { status: 'pending_approval'; approval_id: string; approval: ReturnType<typeof serializeApproval> };
+  | { status: 'pending_approval'; approval_id: string; approval: ReturnType<typeof serializeApproval> }
+  | { status: 'confirmation_required'; approval_id: string; approval: ReturnType<typeof serializeApproval>; expires_at: string };
+
+/** How long a draft awaiting confirmation in the MCP client (e.g. ChatGPT) stays valid. */
+export const CHAT_CONFIRMATION_TTL_MS = 15 * 60_000;
+
+export type ConfirmMode = 'dashboard' | 'client' | 'either';
+
+/** Maps an integration's approval policy to how its requests must be confirmed (null = no confirmation needed). */
+export function confirmModeFor(principal: Principal): ConfirmMode | null {
+  if (!isIntegration(principal)) return null;
+  switch (principal.approvalPolicy ?? 'REQUIRE_APPROVAL') {
+    case 'REQUIRE_APPROVAL':
+      return 'dashboard';
+    case 'CONFIRM_IN_CHAT':
+      return principal.type === 'oauth' ? 'client' : 'dashboard';
+    case 'CONFIRM_IN_CHAT_OR_DASHBOARD':
+      return principal.type === 'oauth' ? 'either' : 'dashboard';
+    default:
+      return null;
+  }
+}
+
+export function pendingOutcome(approval: Parameters<typeof serializeApproval>[0]): SendOutcome {
+  const data = serializeApproval(approval);
+  if (approval.confirmMode === 'dashboard') return { status: 'pending_approval', approval_id: approval.id, approval: data };
+  return { status: 'confirmation_required', approval_id: approval.id, approval: data, expires_at: (approval.expiresAt ?? new Date()).toISOString() };
+}
 
 /** Entry point for every outbound request. */
 export async function requestSend(principal: Principal, payload: OutboundPayload, ctx: { source: 'dashboard' | 'api' | 'mcp'; recipientLabel?: string | null; ip?: string }): Promise<SendOutcome> {
@@ -156,9 +183,10 @@ export async function requestSend(principal: Principal, payload: OutboundPayload
       await audit({ action: 'message.send_denied', actor: principal, source: ctx.source, accountId: payload.account_id, result: 'denied', metadata: { reason: 'read_only_policy' } });
       throw forbidden('This integration is read-only and cannot send messages');
     }
-    if (policy === 'REQUIRE_APPROVAL') {
-      const approval = await createApproval(principal, payload, ctx.recipientLabel ?? null, ctx.source);
-      return { status: 'pending_approval', approval_id: approval.id, approval: serializeApproval(approval) };
+    const mode = confirmModeFor(principal);
+    if (mode) {
+      const approval = await createApproval(principal, payload, ctx.recipientLabel ?? null, ctx.source, undefined, mode);
+      return pendingOutcome(approval);
     }
   }
   const result = await execute(payload, { sentByUserId: principal.type === 'user' ? principal.id : principal.userId ?? null, sentVia: ctx.source });
@@ -172,7 +200,7 @@ export async function requestSend(principal: Principal, payload: OutboundPayload
   return result;
 }
 
-export async function createApproval(principal: Principal, payload: OutboundPayload, recipientLabel: string | null, source: string, scheduledMessageId?: string) {
+export async function createApproval(principal: Principal, payload: OutboundPayload, recipientLabel: string | null, source: string, scheduledMessageId?: string, mode: ConfirmMode = confirmModeFor(principal) ?? 'dashboard') {
   const approval = await prisma().messageApproval.create({
     data: {
       accountId: payload.account_id,
@@ -185,11 +213,14 @@ export async function createApproval(principal: Principal, payload: OutboundPayl
       requestedByType: principal.type,
       requestedById: principal.id,
       requestedByLabel: principal.label.slice(0, 190),
+      confirmMode: mode,
+      // Chat-only confirmations expire; reviewer approvals stay open until decided.
+      expiresAt: mode === 'client' ? new Date(Date.now() + CHAT_CONFIRMATION_TTL_MS) : null,
     },
   });
   await audit({ action: 'approval.requested', actor: principal, source: source as any, accountId: payload.account_id, result: 'pending', metadata: { approvalId: approval.id, kind: payload.kind, chatId: payload.chat_id } });
   const data = serializeApproval(approval);
-  bus.publish({ type: 'approval.requested', accountId: payload.account_id, data: { approval: data }, webhook: true });
+  bus.publish({ type: 'approval.requested', accountId: payload.account_id, data: { approval: data, confirm_mode: mode }, webhook: true });
   bus.publish({ type: 'approval.changed', accountId: payload.account_id, audience: 'reviewers', data: { approval: data } });
   return approval;
 }

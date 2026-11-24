@@ -134,6 +134,8 @@ export interface Approval {
   recipient_label: string | null;
   payload: any;
   status: string;
+  confirm_mode: 'dashboard' | 'client' | 'either';
+  expires_at: string | null;
   scheduled_message_id: string | null;
   requested_by: { type: string; id: string; label: string | null };
   decision_note: string | null;

@@ -33,7 +33,7 @@ export function adminRoutes(r: Router) {
         prisma().message.count({ where: { ...scoped, direction: 'INBOUND', timestamp: { gte: startOfDay } } }),
         prisma().message.count({ where: { ...scoped, direction: 'OUTBOUND', timestamp: { gte: startOfDay } } }),
         prisma().scheduledMessage.count({ where: { ...scoped, status: { in: ['PENDING', 'AWAITING_APPROVAL'] } } }),
-        prisma().messageApproval.count({ where: { ...scoped, status: 'PENDING' } }),
+        prisma().messageApproval.count({ where: { ...scoped, status: 'PENDING', confirmMode: { in: ['dashboard', 'either'] } } }),
         prisma().chat.findMany({ where: scoped, orderBy: { lastMessageAt: { sort: 'desc', nulls: 'last' } }, take: 8 }),
         prisma().auditLog.findMany({ where: { action: { startsWith: 'account.' }, ...(f ? { accountId: f } : {}) }, orderBy: { timestamp: 'desc' }, take: 10 }),
       ]);

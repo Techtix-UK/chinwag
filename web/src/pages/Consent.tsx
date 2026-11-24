@@ -19,7 +19,9 @@ interface ConsentData {
 }
 
 const POLICY_LABEL: Record<string, string> = {
-  REQUIRE_APPROVAL: 'Require approval before sending (recommended)',
+  CONFIRM_IN_CHAT: 'Confirm in ChatGPT — you confirm each message in the chat before it is sent',
+  CONFIRM_IN_CHAT_OR_DASHBOARD: 'Confirm in ChatGPT or approve in the dashboard',
+  REQUIRE_APPROVAL: 'Dashboard approval — a reviewer approves each message in Techtix WhatsApp',
   READ_ONLY: 'Read-only — cannot send anything',
   DIRECT: 'Direct sending — messages are sent immediately',
 };
@@ -99,10 +101,11 @@ export function ConsentPage() {
               </fieldset>
 
               <label className="grid gap-1.5">
-                <span className="text-[13px] font-semibold">Outbound message policy</span>
+                <span className="text-[13px] font-semibold">How should outgoing messages be confirmed?</span>
                 <NativeSelect value={policy} onChange={(e) => setPolicy(e.target.value)}>
                   {q.data.approval_policies.map((p) => <option key={p} value={p}>{POLICY_LABEL[p]}</option>)}
                 </NativeSelect>
+                {policy.startsWith('CONFIRM_IN_CHAT') && <span className="text-xs text-muted">ChatGPT shows you the exact draft — account, recipient, number and text — and only sends after you say yes. Unconfirmed drafts expire after 15 minutes.</span>}
               </label>
 
               <p className="rounded-md bg-surface-2 p-3 text-xs text-muted">Messages and contacts are third-party content. You can revoke this connection at any time from MCP Integration.</p>

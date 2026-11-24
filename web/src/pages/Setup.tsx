@@ -148,7 +148,9 @@ export function SetupPage() {
               <Field label="Failed sign-ins before lockout" htmlFor="la"><Input id="la" type="number" min={3} max={50} value={sec.login_max_attempts} onChange={(e) => setSec({ ...sec, login_max_attempts: Number(e.target.value) })} /></Field>
               <Field label="Default approval policy for new integrations" htmlFor="ap2">
                 <NativeSelect id="ap2" value={sec.default_approval_policy} onChange={(e) => setSec({ ...sec, default_approval_policy: e.target.value })}>
-                  <option value="REQUIRE_APPROVAL">Require approval before sending (recommended)</option>
+                  <option value="REQUIRE_APPROVAL">Dashboard approval before sending (recommended)</option>
+                  <option value="CONFIRM_IN_CHAT">Confirm each message in ChatGPT</option>
+                  <option value="CONFIRM_IN_CHAT_OR_DASHBOARD">Confirm in ChatGPT or the dashboard</option>
                   <option value="READ_ONLY">Read-only</option>
                   <option value="DIRECT">Direct sending</option>
                 </NativeSelect>

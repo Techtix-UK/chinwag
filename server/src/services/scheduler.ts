@@ -8,9 +8,9 @@ import { conflict, notFound, validationError } from '../lib/errors.js';
 import { errMsg, logger } from '../lib/logger.js';
 import { sessionManager } from '../whatsapp/manager.js';
 import { audit } from './audit.js';
-import { supersede } from './approvals.js';
+import { expireClientConfirmations, supersede } from './approvals.js';
 import { bus } from './events.js';
-import { buildMediaPayload, createApproval, execute, PreSendError, SendUncertainError, type OutboundPayload } from './outbound.js';
+import { buildMediaPayload, confirmModeFor, createApproval, execute, PreSendError, SendUncertainError, type OutboundPayload } from './outbound.js';
 import { accountFilter, assertCan, isIntegration, type Principal } from './permissions.js';
 import { serializeScheduled } from './serializers.js';
 import { settings } from './settings.js';
@@ -46,7 +46,8 @@ export async function createScheduled(p: Principal, input: ScheduleInput, source
   if (input.scheduledAt.getTime() < Date.now() - 60_000) throw validationError('scheduled_at must be in the future');
   const policy = isIntegration(p) ? (p.approvalPolicy ?? 'REQUIRE_APPROVAL') : 'DIRECT';
   if (policy === 'READ_ONLY') throw validationError('This integration is read-only and cannot schedule messages');
-  const needsApproval = policy === 'REQUIRE_APPROVAL';
+  const mode = confirmModeFor(p);
+  const needsApproval = !!mode;
 
   const row = await prisma().scheduledMessage.create({
     data: {
@@ -66,7 +67,7 @@ export async function createScheduled(p: Principal, input: ScheduleInput, source
   });
   let result = row;
   if (needsApproval) {
-    const approval = await createApproval(p, await toPayload(row), input.recipientLabel, source, row.id);
+    const approval = await createApproval(p, await toPayload(row), input.recipientLabel, source, row.id, mode!);
     result = await prisma().scheduledMessage.update({ where: { id: row.id }, data: { approvalId: approval.id } });
   }
   await audit({ action: 'scheduled_message.created', actor: p, source, accountId: input.accountId, metadata: { scheduledId: row.id, chatId: input.recipientWaId, scheduledAt: input.scheduledAt.toISOString(), approval: needsApproval } });
@@ -108,7 +109,7 @@ export async function updateScheduled(p: Principal, id: string, patch: { body?: 
   if (patch.scheduledAt && patch.scheduledAt.getTime() < Date.now() - 60_000) throw validationError('scheduled_at must be in the future');
   const contentChanged = (patch.body !== undefined && patch.body !== row.body) || (patch.attachmentId !== undefined && patch.attachmentId !== row.attachmentId);
   const timeChanged = patch.scheduledAt !== undefined && patch.scheduledAt.getTime() !== row.scheduledAt.getTime();
-  const needsApproval = isIntegration(p) ? (p.approvalPolicy ?? 'REQUIRE_APPROVAL') === 'REQUIRE_APPROVAL' : false;
+  const needsApproval = !!confirmModeFor(p);
   if (isIntegration(p) && p.approvalPolicy === 'READ_ONLY') throw validationError('This integration is read-only');
 
   const data: Prisma.ScheduledMessageUpdateInput = {
@@ -164,6 +165,7 @@ export async function tick(now = new Date()) {
   if (running) return;
   running = true;
   try {
+    await expireClientConfirmations();
     const due = await prisma().scheduledMessage.findMany({ where: { status: 'PENDING', scheduledAt: { lte: now } }, orderBy: { scheduledAt: 'asc' }, take: 25 });
     const expiryMs = settings().scheduledExpiryMinutes * 60_000;
     for (const s of due) {

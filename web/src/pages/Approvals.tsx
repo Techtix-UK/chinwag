@@ -8,6 +8,7 @@ import { fmtDateTime, timeAgo } from '@/lib/utils';
 import { EmptyState, Page, PageHeader, Pager, StatusBadge, toastError, useAccountName } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/misc';
 
@@ -50,7 +51,7 @@ export default function Approvals() {
   const items = q.data?.data ?? [];
   return (
     <Page className="max-w-4xl">
-      <PageHeader title="Message Approvals" description="Outbound messages requested by integrations. Approval applies to this exact content and recipient; any change requires a new approval." />
+      <PageHeader title="Message Approvals" description="Outbound messages requested by integrations. Approval applies to this exact content and recipient; any change requires a new approval. Drafts that the requester confirms in ChatGPT appear under All." />
       <Tabs value={status} onValueChange={(v) => { setStatus(v); setOffset(0); }} className="mb-3">
         <TabsList>
           <TabsTrigger value="pending">Pending</TabsTrigger>
@@ -69,7 +70,11 @@ export default function Approvals() {
                 <p className="text-[13px] font-semibold">To {a.recipient_label ?? a.recipient_wa_id} <span className="font-normal text-muted">via {accName(a.account_id)}</span></p>
                 <p className="text-xs text-muted">Requested by {a.requested_by.label ?? a.requested_by.type} · {timeAgo(a.created_at)} · {a.kind}{a.scheduled_message_id ? ' · scheduled message' : ''}</p>
               </div>
-              <StatusBadge status={a.status} />
+              <div className="flex items-center gap-1.5">
+                {a.confirm_mode === 'client' && <Badge tone="info">Confirm in ChatGPT</Badge>}
+                {a.confirm_mode === 'either' && <Badge tone="info">ChatGPT or dashboard</Badge>}
+                <StatusBadge status={a.status} />
+              </div>
             </div>
             <div className="mt-3"><Payload a={a} /></div>
             {a.error && <p className="mt-2 text-xs text-danger">{a.error}</p>}
@@ -78,7 +83,9 @@ export default function Approvals() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Input className="min-w-48 flex-1" placeholder="Optional note" value={notes[a.id] ?? ''} onChange={(e) => setNotes({ ...notes, [a.id]: e.target.value })} />
                 <Button variant="outline" onClick={() => decide(a, 'reject')}>Reject</Button>
-                <Button onClick={() => decide(a, 'approve')}>{a.scheduled_message_id ? 'Approve' : 'Approve and send'}</Button>
+                {a.confirm_mode === 'client'
+                  ? <span className="self-center text-xs text-muted">Waiting for the requester to confirm in ChatGPT{a.expires_at ? ` (expires ${fmtDateTime(a.expires_at, { timeStyle: 'short' })})` : ''}</span>
+                  : <Button onClick={() => decide(a, 'approve')}>{a.scheduled_message_id ? 'Approve' : 'Approve and send'}</Button>}
               </div>
             )}
           </Card>
