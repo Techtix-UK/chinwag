@@ -272,15 +272,18 @@ export async function applyRevoke(accountId: string, waMessageId: string) {
   await prisma().message.updateMany({ where: { accountId, waMessageId }, data: { isDeleted: true, deletedAt: new Date() } });
 }
 
-export async function applyReaction(accountId: string, r: { msgId: { _serialized: string }; senderId: string; reaction: string; timestamp: number }) {
-  const message = await prisma().message.findUnique({ where: { accountId_waMessageId: { accountId, waMessageId: r.msgId._serialized } } });
+export async function applyReaction(accountId: string, r: { msgId?: { _serialized?: string } | string | null; senderId?: string | null; reaction?: string | null; timestamp?: number }) {
+  // Reaction payloads vary between WhatsApp Web builds; ignore ones we cannot attribute.
+  const waMessageId = typeof r?.msgId === 'string' ? r.msgId : r?.msgId?._serialized;
+  if (!waMessageId || !r.senderId) return null;
+  const message = await prisma().message.findUnique({ where: { accountId_waMessageId: { accountId, waMessageId } } });
   if (!message) return null;
   if (!r.reaction) {
-    await prisma().messageReaction.deleteMany({ where: { messageId: message.id, senderWaId: r.senderId } });
+    await prisma().messageReaction.deleteMany({ where: { messageId: message.id, senderWaId: r.senderId! } });
   } else {
     await prisma().messageReaction.upsert({
-      where: { messageId_senderWaId: { messageId: message.id, senderWaId: r.senderId } },
-      create: { messageId: message.id, accountId, senderWaId: r.senderId, emoji: r.reaction.slice(0, 30), timestamp: new Date((r.timestamp || Date.now() / 1000) * 1000) },
+      where: { messageId_senderWaId: { messageId: message.id, senderWaId: r.senderId! } },
+      create: { messageId: message.id, accountId, senderWaId: r.senderId!, emoji: r.reaction.slice(0, 30), timestamp: new Date((r.timestamp || Date.now() / 1000) * 1000) },
       update: { emoji: r.reaction.slice(0, 30), timestamp: new Date((r.timestamp || Date.now() / 1000) * 1000) },
     });
   }

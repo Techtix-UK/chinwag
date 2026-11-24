@@ -22,6 +22,7 @@ const { Client, LocalAuth } = wwebjs;
 const STABLE_RESET_MS = 10 * 60_000;
 const INIT_TIMEOUT_MS = 180_000;
 const WATCHDOG_INTERVAL_MS = 60_000;
+const AUTH_READY_TIMEOUT_MS = 10 * 60_000;
 
 interface ManagedSession {
   accountId: string;
@@ -40,6 +41,7 @@ interface ManagedSession {
   watchdogFailures: number;
   loadingPercent: number | null;
   startedAt: number;
+  authenticatedAt: number | null;
 }
 
 export interface SessionSnapshot {
@@ -68,7 +70,7 @@ export const defaultClientFactory: ClientFactory = ({ clientId, dataPath }) => {
   const e = env();
   const args = ['--disable-dev-shm-usage', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions'];
   if (e.CHROMIUM_DISABLE_SANDBOX) args.push('--no-sandbox', '--disable-setuid-sandbox');
-  return new Client({
+  const client = new Client({
     authStrategy: new LocalAuth({ clientId, dataPath }),
     puppeteer: {
       headless: true,
@@ -81,6 +83,20 @@ export const defaultClientFactory: ClientFactory = ({ clientId, dataPath }) => {
     deviceName: 'Techtix WhatsApp',
     browserName: 'Chrome',
   } as any);
+  // Naming the linked device is cosmetic. WhatsApp Web only exposes the module it uses on the
+  // pairing page; on the main page it is lazily loaded and missing, which made initialisation
+  // (and the post-QR re-injection) throw "Cannot read properties of null (reading 'info')".
+  const setDeviceName = (client as any).setDeviceName?.bind(client);
+  if (setDeviceName) {
+    (client as any).setDeviceName = async (...args: unknown[]) => {
+      try {
+        await setDeviceName(...args);
+      } catch (e) {
+        log.debug('Could not set linked-device name (non-fatal)', { error: errMsg(e) });
+      }
+    };
+  }
+  return client;
 };
 
 export class SessionManager {
@@ -266,6 +282,7 @@ export class SessionManager {
         watchdogFailures: 0,
         loadingPercent: null,
         startedAt: Date.now(),
+        authenticatedAt: null,
       };
       this.sessions.set(accountId, s);
     }
@@ -314,6 +331,7 @@ export class SessionManager {
     s.generation++;
     s.startedAt = Date.now();
     s.watchdogFailures = 0;
+    s.authenticatedAt = null;
     const gen = s.generation;
     const isCurrent = () => this.sessions.get(accountId)?.generation === gen && !s.stopping;
 
@@ -411,6 +429,12 @@ export class SessionManager {
 
   private async runWatchdog() {
     for (const s of this.sessions.values()) {
+      // Authenticated but WhatsApp Web never became ready: restart (bounded by the retry limit).
+      if (!s.ready && s.client && !s.stopping && s.authenticatedAt && Date.now() - s.authenticatedAt > AUTH_READY_TIMEOUT_MS) {
+        s.authenticatedAt = null;
+        void this.handleFailure(s.accountId, s.generation, `WhatsApp Web did not finish loading within ${AUTH_READY_TIMEOUT_MS / 60000} minutes of authentication`);
+        continue;
+      }
       if (!s.ready || !s.client || s.stopping) continue;
       if (s.readyAt && Date.now() - s.readyAt > STABLE_RESET_MS && s.retries > 0) s.retries = 0;
       const gen = s.generation;
@@ -478,6 +502,7 @@ export class SessionManager {
       'authenticated',
       guard('authenticated', async () => {
         s.qr = s.qrDataUrl = null;
+        s.authenticatedAt = Date.now();
         await this.setStatus(accountId, 'AUTHENTICATING', 'Authenticated — loading WhatsApp Web');
         bus.publish({ type: 'account.qr', accountId, audience: 'manage', data: { data_url: null } });
         await audit({ action: 'account.authenticated', accountId, source: 'system' });

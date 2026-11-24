@@ -4,7 +4,7 @@ import { createApp } from '../app.js';
 import { prisma } from '../db/prisma.js';
 import { createApiKey } from '../services/apiKeys.js';
 import { loadUserPrincipal } from '../services/principals.js';
-import { upsertMessage } from '../whatsapp/sync.js';
+import { applyReaction, upsertMessage } from '../whatsapp/sync.js';
 import { clients, createAccount, createUser, loginAgent, resetDb } from './helpers.js';
 
 const app = createApp();
@@ -142,5 +142,11 @@ describe('REST messaging, approvals and idempotency', () => {
     const chat = await prisma().chat.findFirstOrThrow({ where: { accountId: a.id, waChatId: '447700900888@c.us' } });
     expect(chat.unreadCount).toBe(2);
     expect(chat.lastMessagePreview).toBe('Second');
+  });
+
+  it('ignores reaction events without a resolvable message id (varies by WhatsApp Web build)', async () => {
+    const a = await createAccount('UK');
+    expect(await applyReaction(a.id, { msgId: undefined as any, senderId: 'x@c.us', reaction: '👍', timestamp: 1 })).toBeNull();
+    expect(await applyReaction(a.id, { msgId: {} as any, senderId: 'x@c.us', reaction: '👍', timestamp: 1 })).toBeNull();
   });
 });
