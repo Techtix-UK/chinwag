@@ -110,6 +110,8 @@ chown root:"$SERVICE_USER" .env && chmod 640 .env
 
 # ── 5. Dependencies, build and migrations ───────────────────────────────────
 chown -R "$SERVICE_USER":"$SERVICE_USER" "$APP_DIR"
+# Root may still run git here (e.g. "git pull") after ownership moves to the service user.
+git config --system --get-all safe.directory 2>/dev/null | grep -qx "$APP_DIR" || git config --system --add safe.directory "$APP_DIR"
 chown root:"$SERVICE_USER" .env
 c_info "Installing dependencies (npm ci)…"
 as_service npm ci --no-audit --no-fund
